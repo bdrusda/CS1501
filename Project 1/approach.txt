@@ -1,0 +1,6 @@
+The user's previously entered words are stored in a file called user_history.txt.
+    The frequency of the word is stored directly underneath it.
+Upon each program execution, the word and its frequency are combined into a word_obj
+These word_obj's are sorted based on their frequencies.
+They are then added into a separate DLB trie that is referenced in the same fashion as the dictionary.
+Upon program exit, the words and their frequencies are written to the text file again
