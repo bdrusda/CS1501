@@ -8,7 +8,7 @@ submission procedures page.
 
 Name:  Brendan Drusda
 
-Lecture section:  Monday Wedensday 11AM
+Lecture section:  Monday Wednesday 11AM
 
 Recitation day and time:  Thursday 4PM
 
@@ -19,22 +19,21 @@ Program due date:  2/8/18
 Handed in date:  2/7/18
 
 Source code file name(s):
-
-
-
-
+ac_test.java
+DLB.java
+Node.java
+Word_Freq.java
 
 
 
 Other file name(s) (if relevant):
+approach.txt
+dictionary.txt
 
 
 
 
-
-
-
-Does your program run without error?:
+Does your program run without error?: Yes
 
 If not, what is/are the error(s) and which parts of your program run
 correctly?:

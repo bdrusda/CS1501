@@ -1,6 +1,10 @@
 The user's previously entered words are stored in a file called user_history.txt.
-    The frequency of the word is stored directly underneath it.
-Upon each program execution, the word and its frequency are combined into a word_obj
-These word_obj's are sorted based on their frequencies.
-They are then added into a separate DLB trie that is referenced in the same fashion as the dictionary.
-Upon program exit, the words and their frequencies are written to the text file again
+    Duplicates of words are allowed
+Upon each program execution, an ArrayList is created that makes Word_Freq objects
+    Each time a new word is introduced, it is added to the ArrayList
+    Each time that a duplicate is encountered, the frequency field in the object is increased
+    The ArrayList is then sorted by frequency from greatest to least
+    Words are added to a User DLB trie consecutively to give higher frequency words higher priority
+User entries are appended to the text file
+
+This approach allows the use of prioritizing alphabetized dictionary results to be rolled over into prioritizing frequency-sorted user results.
