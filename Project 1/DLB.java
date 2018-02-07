@@ -9,6 +9,8 @@ public class DLB
 
     public void add_word(String word)   //Add a word to the trie
     {
+        if(check_word(word))            //if the word is already added, don't add it again
+            return;
         add_word(root, word);         //Start at root node
     }
 

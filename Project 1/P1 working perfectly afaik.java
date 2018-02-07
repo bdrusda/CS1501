@@ -14,8 +14,7 @@ public class P1
         try
         {
             //Import the dictionary entries
-            //import_dict = new BufferedReader(new FileReader("dictionary.txt"));
-            import_dict = new BufferedReader(new FileReader("test.txt"));
+            import_dict = new BufferedReader(new FileReader("dictionary.txt"));
             while((nextWord = import_dict.readLine()) != null)
                 dictionary.add_word(nextWord);
             import_dict.close();
@@ -27,8 +26,33 @@ public class P1
                 new File("user_history.txt").createNewFile();
             }
             import_user = new BufferedReader(new FileReader("user_history.txt"));
+
+            ArrayList<Word_Freq> history = new ArrayList<Word_Freq>();
             while((nextWord = import_user.readLine()) != null)
-                user.add_word(nextWord);
+            {
+                Word_Freq temp = new Word_Freq(nextWord);   //create a word_freq object
+                if(history.contains(temp))                  //if the word is already in the list
+                {
+                        int i = 0;
+                        while(temp.getWord().compareTo(history.get(i).getWord()) != 0)
+                        {
+                            i++;                                 //find it
+                        }
+                        (history.get(i)).increment();           //and increment it's frequency
+                }
+                else                                        //if the word is not already in the list
+                {
+                        history.add(temp);                       //add it
+                }
+            }
+            //Sort the arraylist
+            Collections.sort(history);
+            //Add words to the trie accordingly
+            for(int i = 0; i < history.size(); i++)
+            {
+                user.add_word(history.get(i).getWord());
+            }
+
             import_user.close();
         }
         catch(IOException e)
@@ -204,6 +228,11 @@ public class P1
             }
             return return_arr;
         }
+    }
+
+    private void addToHistory(String word, DLB user)
+    {
+
     }
 }
 
