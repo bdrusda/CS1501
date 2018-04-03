@@ -1,0 +1,38 @@
+CarPQ
+    A priority queue that stores cars via a heap data structure
+    This is used for all of the cars for price and mileage and is underlying part of the make model table.
+    A mode variable is used to determine whether or not the heap should sort by price or mileage
+    Adding, due to the need to swim to the correct position, is O(logn).
+    Removal, due to the need to sink to the correct position, is O(logn), as well.
+    Getting the min Car is O(1).
+    Updating, due to sinking and swimming, will be O(logn).
+        This is necessary because, when changing the mileage or price, the priority in the respective PQs may change
+    The sink and swim operations, as stated earlier, are O(logn) in time.
+    The storage is variable, expanding as more cars are added - approximately O(n)
+    A heap came to me as the only reasonable data structure to use to back the prioity queue.
+        Considering the number of lookups necessary and the need for only the minimum objects, a heap's logarithmic runtime could not topped.
+
+VINTable
+    A hash table that utilizes the Car's VIN as a key while storing the Car itself as a value.
+    Hashing is done using Horner's method.
+        This will take 17 (the VIN length) multiplications and will be asymptotically constant
+    Adding to the table will, in the average case, be asymptotically O(1), as the table is always at least twice as large as the number of cars in it, reducing possible collisions.
+    Lookup will take as much time as adding, as it follows the same general procedure.
+    The storage overhead is variable, however it starts at a size of 503.
+        This allows for around 250 cars to be put in the table without much collision.
+        In addition, it is a prime number, so it fits hashing properties well.
+        Approximately O(n) in overhead as cars are added
+    Approaching storing the cars with a hash table comes intuitively and efficiently.  Given a sufficiently large array for hashing, both add and lookup tend towards constant time.
+        This keeps lookup time short so other operations can run efficiently
+
+MakeModelTable
+    This is a hash table structured similarly to the VINTable with small changes.
+    Rather than Cars, the values are CarPQ objects and, rather than VINs, the make and model are used for hashing.
+    Adding will be O(logn).  The lookup for the correct PQ is asymptotically constant time, however the add operation in the underlying CarPQ is logarithmic.
+    Looking up a Car by make and model, barring worst case collisions, will be O(1).
+    Looking up the PQ is constant time, as well.
+    The storage is variable, as in the VINTable, starting at a size of 103
+        When it is half full, it is resized to ensure that collisions aren't frequent
+        Roughly O(n) in overhead as more makes and models are added
+    Approaching storing the PQs with a hash table came naturally after hashing with the VINTable.  Lookup follows the same general principles, albeit using a different key.
+        Again, lookup time is mitigated so other operations can execute quickly
