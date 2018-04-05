@@ -26,7 +26,7 @@ public class LLObject
         return bandwidth;
     }
 
-    public String toString()
+    public String toString()    //Only used in debugging
     {
         return ("Path: "+path+"\nLatency: "+latency+"\nBandwidth: "+bandwidth);
     }

@@ -6,25 +6,24 @@ You must submit an information sheet with every assignment.  Also be sure
 to submit all materials following the procedures described on the
 submission procedures page.
 
-Name:  
+Name:  Brendan Drusda
 
-Lecture section:  
+Lecture section:  Monday/Wednesday 11AM
 
-Recitation day and time:  
+Recitation day and time:  Thursday 4PM
 
-Assignment #:  
+Assignment #:  4
 
-Program due date:  
+Program due date: 04/05/18
 
-Handed in date:  
+Handed in date:  04/05/18
 
 Source code file name(s):
-
-
-
-
-
-
+NetworkAnalysis.java
+Graph.java
+Edge.java
+Vertex.java
+LLObject.java
 
 Other file name(s) (if relevant):
 
@@ -34,10 +33,10 @@ Other file name(s) (if relevant):
 
 
 
-Does your program run without error?:
+Does your program run without error?: yes
 
 If not, what is/are the error(s) and which parts of your program run
-correctly?:
+correctly?: N/A
 
 
 
@@ -46,10 +45,3 @@ correctly?:
 
 
 Additional comments to the grader:
-
-
-
-
-
-
-

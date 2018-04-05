@@ -29,7 +29,7 @@ public class NetworkAnalysis
         //Interpret the file and store graph as an adjacency list
         int numVertices = in.nextInt();        in.nextLine();   //Get the number of vertices and clear the buffer
         Vertex[] vertices = new Vertex[numVertices];            //Create an adjacency list for the graph
-        for(int i = 0; i < numVertices; i++)                 //Initialize the adjacency list
+        for(int i = 0; i < numVertices; i++)                    //Initialize the adjacency list
             vertices[i] = new Vertex(i);
 
         ArrayList<Edge> edges = new ArrayList<Edge>();
@@ -112,9 +112,6 @@ public class NetworkAnalysis
             else if(response == 5)      //5. Determine whether the graph would remain connected if any two vertices fail
             {
                 network.connectedWithFailure();
-                //You are not prompting the user for two vertices that could fail
-                //This is whether any pair of vertices that, should they both fail, would cause the graph to become disconnected
-                    //Do we just want to determine the min cut and see if it's two or less?
             }
             else                        //6. Quit the program
             {
@@ -124,9 +121,4 @@ public class NetworkAnalysis
         }
     }
 
-        //Output the sequence of vertices that comprise the lowest-latency path, in order from a to b
-            //Must find the path between these that will take the least amount of time for a single packet to travel
-                //Assume that time required to travel is the sum of the times required to travel each link
-        //Output the bandwidth thtat is available along the resulting path
-                //aka the minimum bandwidth of all the edges in the path
 }

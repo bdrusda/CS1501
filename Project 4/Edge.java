@@ -3,8 +3,8 @@ public class Edge
 //All edges are bidirectional
 
 /*Object variables*/
-    private Vertex a;              //endpoint 1
-    private Vertex b;              //endpoint 2
+    private Vertex a;           //endpoint 1
+    private Vertex b;           //endpoint 2
     private String material;    //type of cable
     private int bandwidth;      //bandwidth (MB/s)
     private int length;         //length of the edge (meters)
@@ -96,6 +96,7 @@ public class Edge
         return ("A: "+a+"\tB:"+b+"\tMaterial: "+material+"\tBandwidth: "+bandwidth+"\tLength: "+length+"\tTravel Time: "+travelTime);
     }
 
+    //Compare two edges to see which has the lower travel time
     public int compare(Edge temp)
     {
         if(travelTime > temp.getTravelTime())
@@ -109,6 +110,7 @@ public class Edge
         return 0;   //Return 0 if they're equal
     }
 
+    //Update the time to travel
     public void updateTT()
     {
         //The time to travel each link is equal to the length of the cable divided by the speed at which data can be sent (determined by the link type)

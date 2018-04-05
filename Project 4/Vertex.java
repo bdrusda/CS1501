@@ -2,8 +2,8 @@ import java.util.LinkedList;
 
 public class Vertex
 {
-    private LinkedList<Edge> edges;      //All of this vertex's edges
-    private int number;                 //Vertex's identification
+    private LinkedList<Edge> edges;         //All of this vertex's edges
+    private int number;                     //Vertex's identification
 
 /*Constrctors*/
     public Vertex()
