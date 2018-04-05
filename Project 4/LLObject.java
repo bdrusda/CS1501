@@ -1,13 +1,13 @@
 public class LLObject
 {
     String path;
-    double length;
+    double latency;
     int bandwidth;
 
-    public LLObject(String path, double length, int bandwidth)
+    public LLObject(String path, double latency, int bandwidth)
     {
         this.path = path;
-        this.length = length;
+        this.latency = latency;
         this.bandwidth = bandwidth;
     }
 
@@ -16,9 +16,9 @@ public class LLObject
         return path;
     }
 
-    public double getLength()
+    public double getLatency()
     {
-        return length;
+        return latency;
     }
 
     public int getBandwidth()
@@ -28,6 +28,6 @@ public class LLObject
 
     public String toString()
     {
-        return ("Path: "+path+"\nLength: "+length+"\nBandwidth: "+bandwidth);
+        return ("Path: "+path+"\nLatency: "+latency+"\nBandwidth: "+bandwidth);
     }
 }

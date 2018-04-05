@@ -6,15 +6,13 @@ public class Graph
 	private int numVertices;                                       //Number of vertices
 	private Vertex[] vertices;                                     //Array of vertices
 	private ArrayList<Edge> edges;                                 //Array list of edges
-	private ArrayList<Edge> minSpanningTreeWithLowestLatency;      //Array list of edges for the min spanning tree
-	private double lowestAverageLatency;                           //The lowest average latency
 
     //Initialize the graph with a set of bertices and edges
 	public Graph(Vertex[] vertices, ArrayList<Edge> edges)
     {
-		minSpanningTreeWithLowestLatency = null;  //?
         this.vertices = vertices;
         this.edges = edges;
+        numVertices = vertices.length;
 	}
 
 	//Path between two given vertices with the lowest latency
@@ -24,94 +22,115 @@ public class Graph
 		Vertex destination = vertices[b];
 
 		//Get the shortest path between two vertices
-		LLObject info = shortestPath(source, destination, "" + source.getNumber(), 0L, -1);
-
+		LLObject info = shortestPath(source, destination, ""+source.getNumber(), 0, -1);    //Compute the shortest latency path along with its latency and bandwidth bottleneckage
 		if(info == null)
-        {
             return;
-        }
 
 		String path = info.getPath();
-		String directedPath = "";
-		for(int i = 0; i < path.length(); i++)    //Change this too fancy DEBUG
+		StringBuilder formatPath = new StringBuilder();
+		for(int i = 0; i < path.length(); i++)                //Take the path and put arrows between the vertices
         {
-			if(i < path.length()-1)
+            formatPath.append(path.charAt(i));
+			if(i != path.length()-1)
             {
-				directedPath += path.charAt(i) + " -> ";
-			} else
-            {
-				directedPath += path.charAt(i);
+				formatPath.append(" > ");
 			}
 		}
-		path = directedPath;
-		double pathTravelTime = info.getLength();     //Time to send a set of data from the start vertex to the destination vertex in nanoseconds
-		int pathMinBandwidth = info.getBandwidth();   //Minimum bandwidth of the path between the vertices; in other words, the max amount of data allowed along the path
-		System.out.printf("\nShortest path: %s\nTime/Latency: %.3f nanoseconds\nBandwidth: %d Mbps\n", path, pathTravelTime, pathMinBandwidth);
+        path = formatPath.toString();                         //The min path followed
+		double latency = info.getLatency()*Math.pow(10,9);    //Time to send one packet from a to b in nanoseconds
+		int bandwidth = info.getBandwidth();                  //Bottlenecked bandwidth
+		System.out.println("Shortest path from "+source+" to "+destination+": "+path+"\nLatency: "+String.format("%.5f", latency)+" nanoseconds\nBandwidth: "+bandwidth+" Mbps\n");
 	}
 
-	//Find out whether graph is connected with only copper, connected considering only copper, or neither
+	//Check if the path is still connected when fiber isn't considered
 	public void copperConnected()
     {
-        boolean hasCopperConnection = false;
-		for(int i = 0; i < numVertices; i++)
-        { //Iterate through every vertex and check to make sure it has at least one copper connection
-			LinkedList<Edge> vertexedges = vertices[i].getEdges();
-			hasCopperConnection = false;
+        boolean containsCopper = false;
+		for(int i = 0; i < numVertices; i++)                      //Iterate through all of the vertices
+        {
+			LinkedList<Edge> currEdges = vertices[i].getEdges();     //Get all of the edges for vertex i
 
-			for(Edge edge : vertexedges){
-				if(edge.getMaterial().equals("copper"))
-                { //There exists a copper wire from this vertex
-					hasCopperConnection = true;
+            containsCopper = false;
+			for(int j = 0; j < currEdges.size(); j ++)               //Iterate through all edges
+            {
+				if(currEdges.get(j).getMaterial().equals("copper"))         //If there is an edge made of copper
+                {
+					containsCopper = true;
 					break;
 				}
 			}
 
-			if(!hasCopperConnection)
-            { //If this vertex does not have a single copper connection, then the graph cannot be copper connected
-				break;
-			}
+            if(containsCopper == false)                             //If, after checking all edges, there is no copper attached to this vertex
+            {
+                System.out.println("The graph is not copper connected");
+                return;
+            }
 		}
 
-		if(hasCopperConnection)
+		if(containsCopper)                                            //If each vertex has a copper edge, the graph is copper connected
         {
-            System.out.println("-- This graph can be connected with only copper wires.  But, this graph also has fiber optic wires.");
+            System.out.println("The graph is copper connected");
 		}
-        else
-        {
-            System.out.println("-- This graph is not copper-only and cannot be connected with only copper wires.");
-        }
     }
 
-	//Find the path between two vertices that allows the maximum amount of data transfer at one time
+	//Find the path between any two vertices that produces the largest bandwidth
 	public void maxData(int a, int b)
     {
 		Vertex source = vertices[a];
 		Vertex destination = vertices[b];
 
 		//Calculate all of the paths between the vertices and print out the statistics of the path with the maximum bandwidth
-		int maxData = maxDataBetweenTwovertices(source, destination, "" + source.getNumber(), -1);
-		System.out.println("\nMax amount of data between vertices " + source.getNumber() + " and " + destination.getNumber() + ": " + maxData + " Mbps");
+		int bandwidth = maxData(source, destination, ""+source.getNumber(), -1);
+		System.out.println("Max data that can flow from vertex "+source.getNumber()+" to vertex "+destination.getNumber()+": "+bandwidth+" MB/s");
 	}
 
-    //Calculate the minimum spanning tree with the lowest average latency among the edges.
-    //Another definition of this is the tree that allows for the fastest data transfer across the entire graph.
-    public void lowestSpanningTree()
+    //Find the minimum spanning tree with the lowest latency
+    public void lowestAverageLatency()
     {
-        if(minSpanningTreeWithLowestLatency == null)
-        { //Generate the minimum spanning tree using Kruskal's algorithm
-            lowestAverageLatency = KruskalMST() / minSpanningTreeWithLowestLatency.size(); //Divide the total latency by the number of edges to get the average latency
-        } //Else, the Min Spanning Tree has already been created, so no need to waste CPU resources to generate the same on
-
-        //Print out all of the edges used to construct this minimum spanning tree
-        System.out.println("Lowest Average Latency Spanning Tree edges\n------------------------------------------");
-        for(int i = 0; i < minSpanningTreeWithLowestLatency.size(); i++)
+        //Kruskal's algorithm modified from princeton method
+        ArrayList<Edge> spanningTree = new ArrayList<Edge>();      //Array list of edges for the min spanning tree
+        int[] parent = new int[numVertices];
+        int[] rank = new int[numVertices];
+        for (int i = 0; i < numVertices; i++)   //Initialize parent of i to itself, ranks to 0
         {
-            Edge temp = minSpanningTreeWithLowestLatency.get(i);
-            System.out.println("( " + temp.getA().getNumber() + " , " + temp.getB().getNumber() + " )");
+            parent[i] = i;
+            rank[i] = 0;
         }
 
-        //Print out the average latency of the edges in this minimum spanning tree
-        System.out.printf("\nThe average latency of this spanning tree is %.3f nanoseconds.\n", lowestAverageLatency);
+		Collections.sort(edges, (e1, e2) -> e1.compare(e2));  //Sort the edges in by minimum weight DEBUG kinda confusing
+
+		double latency = 0.0;                                 //Tree's total latency
+
+        //Greedy Algorithm - Adapted from princeton KruskalMST
+		int currEdge = 0;                                     //Edge that will be added assuming a cycle doesn't occur
+        while(currEdge != edges.size()-1 && spanningTree.size() < numVertices - 1)  //Run through all edges or until all vertices are connected
+        {
+            Edge e = edges.get(currEdge);
+            int v = e.getA().getNumber();
+            int w = e.getB().getNumber();
+            if(!connected(v, w, parent))
+            { //Edge (v,w) does not create a cycle
+                union(v, w, parent, rank); //Logically add the edge (v,w) to the minimum spanning tree's union of all its edges
+                spanningTree.add(e);  //Add edge e to mst to refer to it later
+                latency += e.getTravelTime();
+            }
+			currEdge++; //In the next iteration, look at the next edge in the tree
+        }
+
+        //Once the algorithm is done, compute the latencies
+        latency = latency*Math.pow(10, 9);                //Total latnecy in nanoseconds
+    	double averageLatency;             //The average latency
+
+        averageLatency = latency/spanningTree.size();
+
+        System.out.println("The minimum spanning tree for this graph, based on latency, is:");
+        for(int i = 0; i < spanningTree.size(); i++)
+        {
+            Edge temp = spanningTree.get(i);
+            System.out.println("[" + temp.getA().getNumber() + "," + temp.getB().getNumber() + "]");
+        }
+
+        System.out.printf("The average latency of this spanning tree is "+String.format("%.5f", averageLatency)+" nanoseconds.");
     }
 
 	//When any two vertices fail, determine whether or not the graph is still connected
@@ -179,22 +198,19 @@ public class Graph
 	}
 
     /*Extra Methods*/
-	private LLObject shortestPath(Vertex source, Vertex destination, String path, double length, int minBandwidth)
+    //Calculates the shortest path between two given vertices in terms of latency
+	private LLObject shortestPath(Vertex source, Vertex destination, String path, double latency, int minBandwidth)
     {
-		if(source == null || destination == null || path == null || length < 0.0)
-        {
-            return null; //If anything is null for whatever reason, return as such
-            //May not be necssary
-        }
+
 		if(source == destination)                         //We are at the end, return what we have
         {
-            LLObject info = new LLObject(path, length, minBandwidth);
+            LLObject info = new LLObject(path, latency, minBandwidth);
 			return info;
         }
 
 		LinkedList<Edge> currEdges = source.getEdges();   //Get this vertex's edges
 
-		double minLength = -1.0;                         //Length of the minimum length path thusfar
+		double minLatency = -1.0;                         //Length of the minimum length path thusfar
 		String partialPath = "";                          //String containing the path thusfar
 
 		for(int i = 0; i < currEdges.size(); i++)         //Loop through all edges in order to determine all possible paths
@@ -206,7 +222,7 @@ public class Graph
 			if(!(path.contains("" + partialDest.getNumber())))   //If the path doesn't contain this vertex yet
             {
     			String newPath = path + partialDest.getNumber(); //Generate the new path
-    			double newLength = length + tempEdge.getTravelTime();  //Calculate the length to this vertex
+    			double newLatency = latency + tempEdge.getTravelTime();  //Calculate the length to this vertex
     			int newMinBandwidth = minBandwidth;
 
     			if(minBandwidth == -1.0 || tempEdge.getBandwidth() < minBandwidth) //If there was no previous bandwidth or this one is lower
@@ -214,23 +230,22 @@ public class Graph
                     newMinBandwidth = tempEdge.getBandwidth();                 //Update the minimum
                 }
 
-    			LLObject info = shortestPath(partialDest, destination, newPath, newLength, newMinBandwidth); //Go to the next path recursively
+    			LLObject info = shortestPath(partialDest, destination, newPath, newLatency, newMinBandwidth); //Go to the next path recursively
     			if(info != null)                                         //If this edge has no data, visit the next edge
                 {
         			String thisPath = info.getPath();   //A full path to the destination
-    /*Then, currLength can be consolidated into length as well DEBUG*/
-        			double currLength  = info.getLength();
-        			int pathBandwidth = info.getBandwidth();
+        			double currLatency  = info.getLatency();
+                    int pathBandwidth = info.getBandwidth();
 
-        			if(minLength == -1 || currLength < minLength)   //If there is no existing path or a better path ahs been found
+        			if(minLatency == -1 || currLatency < minLatency)   //If there is no existing path or a better path ahs been found
                     {
-        				minLength = currLength;                         //Update the length
+        				minLatency = currLatency;                         //Update the length
         				partialPath = thisPath;                             //Take this edge's path
         				minBandwidth = pathBandwidth;                          //Take this edge's bandiwidth
         			}
-                    else if(currLength == minLength && pathBandwidth > minBandwidth)   //If the length's are the same, but the bandwidth is smaller, swap
+                    else if(currLatency == minLatency && pathBandwidth > minBandwidth)   //If the length's are the same, but the bandwidth is smaller, swap
                     {
-        				minLength = currLength;
+        				minLatency = currLatency;
         				partialPath = thisPath;
         				minBandwidth = pathBandwidth;
         			}
@@ -238,40 +253,48 @@ public class Graph
             }
 		}
 
-		if(minLength != -1.0)    //If there is a path from this vertex
+		if(minLatency != -1.0)    //If there is a path from this vertex
         {
-            LLObject info = new LLObject(partialPath, minLength, minBandwidth);
+            LLObject info = new LLObject(partialPath, minLatency, minBandwidth);
 			return info;
 		}
 
 		return null; //We're not at the destination and no edges from the current vertex are valid (there are none or none reach the destination)
 	}
 
-	//Helper method to calculate the maximum amount of data (highest bandwidth) that can be transferred between two vertices
-	private int maxDataBetweenTwovertices(Vertex curr, Vertex dest, String path, int maxPathBandwidth)
+    //Calculates the path that provides the greatest amount of bandwidth transfer
+	private int maxData(Vertex source, Vertex destination, String path, int bandwidth)
     {
-		if(curr == null || dest == null || path == null) return -1; //Any invalid input will return null promptly
-
-		if(curr == dest)
-        { //The destination vertex has been reached!  Return the necessary path data
-			return maxPathBandwidth;
+		if(source == destination)                         //We have reached the destination; we can return the data
+        {
+			return bandwidth;
 		}
 
-		LinkedList<Edge> curredges = curr.getEdges();
+		LinkedList<Edge> edges = source.getEdges();       //Get all of the source's edges
 
 		int max = -1;
-		for(Edge edge : curredges)
-        { //Traverse across all possible paths to the destination and find the maximum possible bandwidth
-			Vertex partialDest = edge.getB();
-			if(path.contains("" + partialDest.getNumber())) continue; //The vertex on the other side of this edge has already been travelled
+		for(int i = 0; i < edges.size(); i++)             //Go through all paths, updating the max bandwidth when applicable
+        {
+            Edge tempEdge = edges.get(i);                   //Get the current edge
+			Vertex partialDest = tempEdge.getA();           //Get the vertex that it is going to
+			if(!path.contains(""+partialDest.getNumber()))  //If the vertex has not yet been visited
+            {
+                int newBandwidth = bandwidth;
+                if(newBandwidth == -1 || tempEdge.getBandwidth() < newBandwidth)
+                {
+                    newBandwidth = tempEdge.getBandwidth();     //Update bandwidth
+                }
 
-			int newMaxPathBandwidth = maxPathBandwidth;
-			if(newMaxPathBandwidth == -1 || edge.getBandwidth() < newMaxPathBandwidth) newMaxPathBandwidth = edge.getBandwidth(); //Set the new minimum path bandwidth
-
-			String newPath = path + partialDest.getNumber();
-			int pathBandwidth = maxDataBetweenTwovertices(partialDest, dest, newPath, newMaxPathBandwidth); //Recursively traverse across the graph
-			if(pathBandwidth == -1) continue; //If there is no path data for the edge, go to the next edge
-			if(pathBandwidth > max) max = pathBandwidth; //Found a path with a new max bandwidth
+                String newPath = path+partialDest.getNumber();
+                int pathBandwidth = maxData(partialDest, destination, newPath, newBandwidth);  //Move through the graph recursively
+                if(pathBandwidth != -1)                                                 //If the search resulted in a new bandwidth
+                {
+                    if(pathBandwidth > max)                                                 //Check if it is graeter than the max
+                    {
+                        max = pathBandwidth;                                                    //If it is, update it
+                    }
+                }
+            }
 		}
 
 		return max;
@@ -302,60 +325,18 @@ public class Graph
 		return;
 	}
 
-	//Execute Kruskal's algorithm to find the minimum spanning tree of the graph
-	//	with the lowest weight.
-	private double KruskalMST()
-    {
-		//Initialize our union-find components; taken from book's code
-		int[] parent = new int[numVertices];
-        byte[] rank = new byte[numVertices];
-        for (int i = 0; i < numVertices; i++)
-        {
-            parent[i] = i;
-            rank[i] = 0;
-        }
-
-		//Use a lambda expression to sort the edges from min to max weight
-		Collections.sort(edges, (e1, e2) -> e1.compare(e2));
-
-		minSpanningTreeWithLowestLatency = new ArrayList<Edge>(); //edges in the minimum spanning tree
-		double weight = 0.0; //Total weight of the minimum spanning tree; in this case, weight will be the time taken to travel along all of the edges
-
-        //Core of Kruskal's algorithm
-		int currEdge = 0; //Current minimum weight edge we're considering adding to the MST assuming it doesn't create a cycle
-        while(currEdge != edges.size()-1 && minSpanningTreeWithLowestLatency.size() < numVertices - 1){ //We have edges left and the spanning tree hasn't reached all vertices yet
-            Edge e = edges.get(currEdge);
-            int v = e.getA().getNumber();
-            int w = e.getB().getNumber();
-            if(!connected(v, w, parent)){ //Edge (v,w) does not create a cycle
-                union(v, w, parent, rank); //Logically add the edge (v,w) to the minimum spanning tree's union of all its edges
-                minSpanningTreeWithLowestLatency.add(e);  //Add edge e to mst to refer to it later
-                weight += e.getTravelTime();
-            }
-
-			currEdge++; //In the next iteration, look at the next edge in the tree
-        }
-
-		return weight;
-	}
-
-	//Merges the component containing site p with the
-	//	the component containing site q.
-    private void union(int p, int q, int[] parent, byte[] rank)
+	//Inputs adapted to from princeton union method
+    private void union(int p, int q, int[] parent, int[] rank)
     {
         int rootP = find(p, parent);
         int rootQ = find(q, parent);
         if (rootP == rootQ) return;
 
-        //Make root of smaller rank point to root of larger rank
+        // make root of smaller rank point to root of larger rank
         if(rank[rootP] < rank[rootQ])
-        {
             parent[rootP] = rootQ;
-        }
         else if(rank[rootP] > rank[rootQ])
-        {
             parent[rootQ] = rootP;
-        }
         else
         {
             parent[rootQ] = rootP;
@@ -363,14 +344,13 @@ public class Graph
         }
     }
 
-	//Returns true if the the two sites are in the same component.
-	//Indicates later on if the two vertices connecting will cause a cycle in the graph.
+	//Inputs adapted from the princeton connected method - compares the groups that p and q belong to, determines if they match
 	private boolean connected(int p, int q, int[] parent)
     {
         return find(p, parent) == find(q, parent);
     }
 
-	//Returns the component identifier for the component containing site p.
+	//Inputs adapted from the princeton find method - returns the group that p belongs to
 	private int find(int p, int[] parent)
     {
         while (p != parent[p])

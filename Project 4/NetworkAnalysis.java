@@ -94,7 +94,8 @@ public class NetworkAnalysis
             }
             else if(response == 2)      //2. Determine whether or not the graph is copper-only connected
             {
-                //aka connected when only considered copper links (ignore the fiber-optic)
+                //aka connected when only considering copper links (ignore the fiber-optic)
+                network.copperConnected();
             }
             else if(response == 3)      //3. Find the maximum amount of data that can be transmitted from one vertex to another
             {
@@ -102,11 +103,11 @@ public class NetworkAnalysis
                 System.out.print("Enter any two vertices from "+0+" to "+(numVertices-1)+": ");
                 int a = in.nextInt();
                 int b = in.nextInt();
-                //Output the maximum amount of data the can be transmitted from a to b
+                network.maxData(a, b); //Output the maximum amount of data the can be transmitted from a to b
             }
             else if(response == 4)      //4. Find the minimum average latency spanning tree
             {
-                //aka the spanning tree with the lowest average latency per edge
+                network.lowestAverageLatency();     //aka the spanning tree with the lowest average latency per edge
             }
             else if(response == 5)      //5. Determine whether the graph would remain connected if any two vertices fail
             {
