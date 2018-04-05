@@ -111,6 +111,7 @@ public class NetworkAnalysis
             }
             else if(response == 5)      //5. Determine whether the graph would remain connected if any two vertices fail
             {
+                network.connectedWithFailure();
                 //You are not prompting the user for two vertices that could fail
                 //This is whether any pair of vertices that, should they both fail, would cause the graph to become disconnected
                     //Do we just want to determine the min cut and see if it's two or less?

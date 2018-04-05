@@ -88,10 +88,10 @@ public class Graph
     public void lowestAverageLatency()
     {
         //Kruskal's algorithm modified from princeton method
-        ArrayList<Edge> spanningTree = new ArrayList<Edge>();      //Array list of edges for the min spanning tree
+        ArrayList<Edge> spanningTree = new ArrayList<Edge>();       //Array list of edges for the min spanning tree
         int[] parent = new int[numVertices];
         int[] rank = new int[numVertices];
-        for (int i = 0; i < numVertices; i++)   //Initialize parent of i to itself, ranks to 0
+        for (int i = 0; i < numVertices; i++)                       //Initialize parent of i to itself, ranks to 0
         {
             parent[i] = i;
             rank[i] = 0;
@@ -105,96 +105,56 @@ public class Graph
 		int currEdge = 0;                                     //Edge that will be added assuming a cycle doesn't occur
         while(currEdge != edges.size()-1 && spanningTree.size() < numVertices - 1)  //Run through all edges or until all vertices are connected
         {
-            Edge e = edges.get(currEdge);
+            Edge e = edges.get(currEdge++);     //Get the edge and move to the next one
             int v = e.getA().getNumber();
             int w = e.getB().getNumber();
-            if(!connected(v, w, parent))
-            { //Edge (v,w) does not create a cycle
-                union(v, w, parent, rank); //Logically add the edge (v,w) to the minimum spanning tree's union of all its edges
-                spanningTree.add(e);  //Add edge e to mst to refer to it later
-                latency += e.getTravelTime();
+            if(!connected(v, w, parent))        //If the edge doesn't create a cycle
+            {
+                union(v, w, parent, rank);      //Add the edge to the minimum spanning tree's union
+                spanningTree.add(e);            //Add edge e to mst
+                latency += e.getTravelTime();   //Add it to the total latency
             }
-			currEdge++; //In the next iteration, look at the next edge in the tree
         }
 
         //Once the algorithm is done, compute the latencies
-        latency = latency*Math.pow(10, 9);                //Total latnecy in nanoseconds
-    	double averageLatency;             //The average latency
+        latency = latency*Math.pow(10, 9);      //Total latency in nanoseconds
+    	double averageLatency = latency/spanningTree.size();                 //The average latency
 
-        averageLatency = latency/spanningTree.size();
-
+        //Print out the spanning tree and its info
         System.out.println("The minimum spanning tree for this graph, based on latency, is:");
         for(int i = 0; i < spanningTree.size(); i++)
         {
             Edge temp = spanningTree.get(i);
             System.out.println("[" + temp.getA().getNumber() + "," + temp.getB().getNumber() + "]");
         }
-
         System.out.printf("The average latency of this spanning tree is "+String.format("%.5f", averageLatency)+" nanoseconds.");
     }
 
-	//When any two vertices fail, determine whether or not the graph is still connected
-	public void minCutGreaterThanTwo()
+	//Determine if the graph will remain connected given any two vertices failing
+	public void connectedWithFailure()
     {
-		//Permute all possible pairs of vertices failing and calculate if the graph is connected or not
-		for(int i = 0; i < numVertices-1; i++)
+		//I feel like this is intended to be a min cut determination, but, as there is no source/destination
+        //if you just check that all vertices have more than 2 edges, this will be necessary and sufficient
+
+        boolean threePlusEdges = true;
+		for(int i = 0; i < numVertices; i++)
         {
-			for(int j = i+1; j < numVertices; j++)
+            Vertex curr = vertices[i];  //Get the i'th vertex
+            if(curr.getEdges().size() <= 2)   //If it has two or less edges, we can't handle two failures
             {
-				//Traverse the graph ignoring vertices[i] and vertices[j]
-				//If the path's length ever reaches numVertices-2, then it is connected
-				Vertex startVertex = null;
-				Vertex failureOne = vertices[i];
-				Vertex failureTwo = vertices[j];
-				boolean[] visited = new boolean[numVertices];
+                threePlusEdges = false;
+                break;
+            }
+        }
 
-				//Mark that the failed vertices have already been visited so the traversal doesn't visit them
-				visited[failureOne.getNumber()] = true;
-				visited[failureTwo.getNumber()] = true;
-
-				//Set the starting vertex for to explore from; it can be any vertex that isn't in the pair of failing vertices
-				if(i != 0)
-                { //If we're omitting vertex 0, then make sure we don't start there
-					startVertex = vertices[0];
-				} else
-                { //Vertex 0 failed, so determine a new vertex that didn't fail
-					if(j != numVertices-1)
-                    {
-						startVertex = vertices[j+1];
-					} else if(j-i != 1)
-                    {
-						startVertex = vertices[j-1];
-					} else
-                    {
-						System.out.println("-- This graph IS NOT connected when any two vertices fail."); //There are only 2 vertices in the graph so if both fail, it is not connected
-						return;
-					}
-				}
-
-				//Pass in the visited array and mark the vertices that were traversed across
-				findConnectivityWithoutTwovertices(startVertex, failureOne, failureTwo, visited);
-
-				//Check to make sure all vertices were visited; in other words, the graph is still connected despite the failures
-				boolean graphIsConnected = true;
-				for(int k = 0; k < visited.length; k++)
-                {
-					if(visited[k] == false)
-                    { //A node was not visited, so the graph is not connected
-						graphIsConnected = false;
-						break;
-					}
-				}
-
-				if(!graphIsConnected)
-                { //If we find out that any two pairs of vertices failing causes the graph to not be connected, return
-					System.out.println("-- This graph IS NOT connected when any two vertices fail.");
-					return;
-				}
-			}
-		}
-
-		System.out.println("-- This graph IS connected when any two vertices fail.");
-		return; //All possible combinations of two vertices failing produced connected graphs
+        if(threePlusEdges)
+        {
+            System.out.println("The network will remain connected if any two vertices fail");
+        }
+        else
+        {
+            System.out.println("There is a pair of vertices whose failure will disconnect the graph");
+        }
 	}
 
     /*Extra Methods*/
@@ -298,31 +258,6 @@ public class Graph
 		}
 
 		return max;
-	}
-
-	//Perform a bread-first search and check that all nodes are visited
-	private void findConnectivityWithoutTwovertices(Vertex curr, Vertex a, Vertex b, boolean[] visited)
-    {
-		if(curr == null || a == null || b == null || visited == null) return; //Any invalid input will return null promptly
-
-		if(visited[curr.getNumber()] == true)
-        { //This node has already been visited
-			return;
-		}
-
-		visited[curr.getNumber()] = true; //Mark that the current node has been visited
-
-		LinkedList<Edge> curredges = curr.getEdges();
-
-		for(Edge edge : curredges)
-        { //Perform a depth-first search to attempt to traverse all nodes except for the failed ones in the graph
-			Vertex partialDest = edge.getB(); //Get the destination Vertex of this current edge
-			if(visited[partialDest.getNumber()] == true) continue; //We already traversed to this node, so don't cycle back to it
-
-			findConnectivityWithoutTwovertices(partialDest, a, b, visited); //Recursively traverse the graph
-		}
-
-		return;
 	}
 
 	//Inputs adapted to from princeton union method
