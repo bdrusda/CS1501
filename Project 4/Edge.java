@@ -3,8 +3,8 @@ public class Edge
 //All edges are bidirectional
 
 /*Object variables*/
-    private int a;              //endpoint 1
-    private int b;              //endpoint 2
+    private Vertex a;              //endpoint 1
+    private Vertex b;              //endpoint 2
     private String material;    //type of cable
     private int bandwidth;      //bandwidth (MB/s)
     private int length;         //length of the edge (meters)
@@ -15,14 +15,14 @@ public class Edge
 /*Constructors*/
     public Edge()
     {
-        a = -1;
-        b = -1;
+        a = null;
+        b = null;
         material = null;
         bandwidth = -1;
         length = -1;
     }
 
-    public Edge(int a, int b, String material, int bandwidth, int length)
+    public Edge(Vertex a, Vertex b, String material, int bandwidth, int length)
     {
         this.a = a;
         this.b = b;
@@ -33,12 +33,12 @@ public class Edge
         updateTT();
     }
 /*Getters*/
-    public int getA()
+    public Vertex getA()
     {
         return a;
     }
 
-    public int getB()
+    public Vertex getB()
     {
         return b;
     }
@@ -64,12 +64,12 @@ public class Edge
     }
 
 /*Setters*/
-    public void setA(int a)
+    public void setA(Vertex a)
     {
         this.a = a;
     }
 
-    public void setB(int b)
+    public void setB(Vertex b)
     {
         this.b = b;
     }
@@ -94,6 +94,19 @@ public class Edge
     public String toString()
     {
         return ("A: "+a+"\tB:"+b+"\tMaterial: "+material+"\tBandwidth: "+bandwidth+"\tLength: "+length+"\tTravel Time: "+travelTime);
+    }
+
+    public int compare(Edge temp)
+    {
+        if(travelTime > temp.getTravelTime())
+        {
+            return 1;
+        }
+        else if(travelTime < temp.getTravelTime())
+        {
+            return -1;
+        }
+        return 0;   //Return 0 if they're equal
     }
 
     public void updateTT()

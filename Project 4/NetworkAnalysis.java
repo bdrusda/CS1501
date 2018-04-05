@@ -1,4 +1,5 @@
 import java.util.Scanner;
+import java.util.ArrayList;
 import java.io.File;
 import java.io.FileNotFoundException;
 
@@ -27,26 +28,44 @@ public class NetworkAnalysis
 
         //Interpret the file and store graph as an adjacency list
         int numVertices = in.nextInt();        in.nextLine();   //Get the number of vertices and clear the buffer
-        Neighbor[] adjList = new Neighbor[numVertices];         //Create an adjacency list for the graph
-        for(int i = 0; i < adjList.length; i++)                 //Initialize the adjacency list
-            adjList[i] = new Neighbor();
+        Vertex[] vertices = new Vertex[numVertices];            //Create an adjacency list for the graph
+        for(int i = 0; i < numVertices; i++)                 //Initialize the adjacency list
+            vertices[i] = new Vertex(i);
 
+        ArrayList<Edge> edges = new ArrayList<Edge>();
         while(in.hasNextLine())
         {
             String[] theEdge = in.nextLine().split(" ");        //Take the line of info about the edge
-            Edge temp = new Edge();                             //Create a temporary edge
-            temp.setA(Integer.parseInt(theEdge[0]));            //Set the first vertex and clear the buffer
-            temp.setB(Integer.parseInt(theEdge[1]));            //Set the second vertex and clear the buffer
-            temp.setMaterial(theEdge[2]);                       //Set the material
-            temp.setBandwidth(Integer.parseInt(theEdge[3]));    //Set the bandwidth
-            temp.setLength(Integer.parseInt(theEdge[4]));       //Set the length
 
-            adjList[temp.getA()].addNeighbor(temp, 'b');             //Mark B as a neighbor of A
-            adjList[temp.getB()].addNeighbor(temp, 'a');              //Mark A as a neighbor of B
+            Vertex a = vertices[Integer.parseInt(theEdge[0])];
+            Vertex b = vertices[Integer.parseInt(theEdge[1])];
+            String material = theEdge[2];
+            int bandwidth = Integer.parseInt(theEdge[3]);
+            int length = Integer.parseInt(theEdge[4]);
+
+            Edge E1 = new Edge();           //Create a temporary edge
+            Edge E2 = new Edge();           //Create a temporary edge
+
+            E1.setA(a);                     //Set the first vertex
+            E1.setB(b);                     //Set the second vertex
+            E1.setMaterial(material);       //Set the material
+            E1.setBandwidth(bandwidth);     //Set the bandwidth
+            E1.setLength(length);           //Set the length
+
+            E2.setA(b);                     //Set the first vertex
+            E2.setB(a);                     //Set the second vertex
+            E2.setMaterial(material);       //Set the material
+            E2.setBandwidth(bandwidth);     //Set the bandwidth
+            E2.setLength(length);           //Set the length
+
+            a.getEdges().addFirst(E2);
+            b.getEdges().addFirst(E1);
+
+            edges.add(E1);
         }
-//        for(int i = 0; i < adjList.length; i++)                 //Initialize the adjacency list
-//            System.out.println(adjList[i]);
-/*Graph is fully loaded into the adjacency list*/
+
+/*Vertices and Edges are completed*/
+        Graph network = new Graph(vertices, edges);
 
         in = new Scanner(System.in);
         while(true)
@@ -71,8 +90,7 @@ public class NetworkAnalysis
                 System.out.print("Enter any two vertices from "+0+" to "+(numVertices-1)+": ");
                 int a = in.nextInt();
                 int b = in.nextInt();
-
-                lowest_latency(adjList, numVertices, a, b);
+                network.lowestLatency(a, b);
             }
             else if(response == 2)      //2. Determine whether or not the graph is copper-only connected
             {
@@ -104,52 +122,9 @@ public class NetworkAnalysis
         }
     }
 
-    public static void lowest_latency(Neighbor[] adjList, int numVertices, int a, int b)
-    {
-        boolean reached = false;
-        //We're going to want to use Dijkstra's for this
-        double distTo[] = new double[numVertices];    //Create distance array corresponding to the distance from a to each vertex
-        for(int i = 0; i < distTo.length; i++)  //Set the distance to MAX_INT initially
-            distTo[i] = Integer.MAX_VALUE;
-
-        Neighbor curr = adjList[a];             //Set curr = a
-        Edge currEdge = curr.getEdge();
-        distTo[currEdge.getA()] = 0;                //Distance is itself
-
-        while(!reached)                         //While b is not yet reached
-        {
-            while(curr != null)                 //Check all edges in the neighbor
-            {
-                currEdge = curr.getEdge();          //Get the edge of the current vertex
-                if(distTo[currEdge.getB()] == Integer.MAX_VALUE)    //The time calculation has not yet begun
-                {
-/*Replace all lengths with travel time once debugging is done*/
-                    //distTo[currEdge.getB()] = currEdge.getTravelTime();    //Compute tentative time from start to the unvisited neighbor through curr
-                    distTo[currEdge.getB()] = currEdge.getLength();    //Compute tentative time from start to the unvisited neighbor through curr
-                }
-                else
-                {
-                    //distTo[currEdge.getB()] += currEdge.getTravelTime();   //Add this time to the total time
-                    distTo[currEdge.getB()] += currEdge.getLength();   //Add this time to the total time
-                }
-                curr = curr.getNext();
-
-                for(int i = 0; i < distTo.length; i++)
-                {
-                    System.out.println("Vertex "+i+": "+distTo[i]);
-                }
-                System.out.println();
-            }
-
-                //Update any vertices for which a  lesser distance is computer
-            //Mark curr as unvisited
-            //Let curr be the unvisited vertex with the smallest tentative distance from start
-        }
-
         //Output the sequence of vertices that comprise the lowest-latency path, in order from a to b
             //Must find the path between these that will take the least amount of time for a single packet to travel
                 //Assume that time required to travel is the sum of the times required to travel each link
         //Output the bandwidth thtat is available along the resulting path
                 //aka the minimum bandwidth of all the edges in the path
-    }
 }
