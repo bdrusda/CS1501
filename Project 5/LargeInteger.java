@@ -222,19 +222,40 @@ public class LargeInteger
 
 		LargeInteger a = new LargeInteger(this);					//Create a copy of this number
 		LargeInteger b = new LargeInteger(other);					//Create a copy of the number to multiply by
-		LargeInteger result = new LargeInteger(new byte[] {0x0});	//Create an intially 0 result LargeInteger
+
+		LargeInteger result;	//Create an intially 0 result LargeInteger
+		byte[] resultArr;
+		if(a.length() > b.length())
+		{
+			resultArr = new byte[a.length()*2];
+		}
+		else
+		{
+			resultArr = new byte[b.length()*2];
+		}
+
+		//Create result array that is twice the size of the larger + 1 byte
+		for(int i = 0; i < resultArr.length; i++)	//Set everything equal to 0
+		{
+			resultArr[i] = 0x00;
+		}
+
+		result = new LargeInteger(resultArr);
+		result.extend((byte) 0);
 
 		if(a.isNegative())
 		{
 			a = a.negate();
 			aNeg = true;
 		}
+		a.extend((byte) 0);	//Extend to ensure the sign is preserved
 
 		if(b.isNegative())
 		{
 			b = b.negate();
 			bNeg = true;
 		}
+		b.extend((byte) 0);
 
 		for(int i = 0; i < b.length(); i++)							//For each byte in b
 		{
@@ -242,10 +263,30 @@ public class LargeInteger
 			{
 				if((b.getVal()[b.length()-1] & 1) == 1)						//Check each byte of b starting at the LSB
 				{
+					/*
+					boolean positive = !(result.isNegative());			//Get the current sign
+					*/
 					result = result.add(a);
+					/*
+					if(positive != !(result.isNegative()))				//If the addition changes it
+					{
+						if(positive)
+							result.extend((byte) 0);									//Extend to preserve the sign
+						else
+							result.extend((byte) 1);
+					}
+					*/
 				}
 
+				boolean negative = a.isNegative();
 				a = leftShift(a);											//Left shift a for future additions
+				if(negative != a.isNegative())	//Check if the sign has changed as a result of the shift
+				{
+					if(negative)
+						a.extend((byte) 1);
+					else
+						a.extend((byte) 0);
+				}
 				b = rightShift(b);											//Right shift b for future LSB checks
 			}
 		}
@@ -259,6 +300,8 @@ public class LargeInteger
 		{
 			result = result.negate();
 		}
+
+		result = result.trimExtra();
 
 		return result;
 	}
@@ -359,9 +402,13 @@ public class LargeInteger
 		 //Compute new x and y
 		 x = yPrev;											//Calculate the new x
 		 y = xPrev.subtract(quotient.multiply(yPrev));		//Calculate the new y
-
+/*
+System.out.println("xprev - (a/b * yprev) = y");
+System.out.println(xPrev.toDecimal()+" - "+"("+quotient.toDecimal()+" * "+yPrev.toDecimal()+" which is "+quotient.multiply(yPrev).toDecimal()+") = "+y.toDecimal());
+System.out.println(xPrev+" - "+"("+quotient+" * "+yPrev+" which is "+quotient.multiply(yPrev)+") = "+y);
+*/
 		 //The left bezout number is misrepresented by decimal, however it is correct
-		 return new LargeInteger[] {theGCD, x, y};			//Return the results
+		 return new LargeInteger[] {theGCD.trimExtra(), x.trimExtra(), y.trimExtra()};			//Return the results
 	 }
 
 	 /**
@@ -425,6 +472,48 @@ public class LargeInteger
 		}
 
 		return minus+dec;
+	}
+
+	public LargeInteger trimExtra()
+	{
+		LargeInteger temp = new LargeInteger(this);
+		boolean aNeg = false;
+
+		if(isNegative())
+		{
+			temp = temp.negate();
+			aNeg = true;
+		}
+
+		//a is now positive, check if there is a byte that is led with 0's
+		byte[] tempB = temp.getVal();
+
+		while(tempB.length > 2)
+		{
+			if(tempB[0] == 0 && tempB[1] == 0)
+			{
+				byte[] less = new byte[tempB.length-1];
+				for(int i = 0; i < less.length; i++)
+				{
+					less[i] = tempB[i+1];
+				}
+				tempB = less;
+			}
+			else
+			{
+				break;
+			}
+		}
+
+		temp = new LargeInteger(tempB);
+
+
+		if(aNeg)
+		{
+			return temp.negate();
+		}
+
+		return temp;
 	}
 
 	public LargeInteger leftShift(LargeInteger a)
