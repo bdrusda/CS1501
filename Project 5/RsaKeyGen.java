@@ -1,9 +1,8 @@
 import java.util.Random;
 import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 
 public class RsaKeyGen
 {
@@ -29,27 +28,22 @@ public class RsaKeyGen
         //Determine d with XGCD
         LargeInteger d = (phiN.XGCD(e))[2];
 
-        BufferedWriter output;
-
-        File file = new File("pubkey.rsa");
+        System.out.println("Writing the public and private keys to their respective files");
         try
         {
-            output = new BufferedWriter(new FileWriter(file));
-            String out = new String(e.getVal(), "UTF-8");
-            output.write(out);
-            output.write("\n");
-            out = new String(n.getVal(), "UTF-8");
-            output.write(out);
-            output.close();
+            ObjectOutputStream output;
+            FileOutputStream pubFile = new FileOutputStream("pubkey.rsa");
+            FileOutputStream privFile = new FileOutputStream("privkey.rsa");
 
-            file = new File("privkey.rsa");
-            output = new BufferedWriter(new FileWriter(file));
-            out = new String(d.getVal(), "UTF-8");
-            output.write(out);
-            output.write("\n");
-            out = new String(n.getVal(), "UTF-8");
-            output.write(out);
-            output.close();
+			output = new ObjectOutputStream(pubFile);
+			output.writeObject(e);
+			output.writeObject(n);
+			output.close();
+
+			output = new ObjectOutputStream(privFile);
+            output.writeObject(d);
+			output.writeObject(n);
+			output.close();
         }
         catch(IOException f)
         {

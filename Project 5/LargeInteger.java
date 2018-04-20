@@ -1,7 +1,8 @@
 import java.util.Random;
 import java.math.BigInteger;
+import java.io.Serializable;
 
-public class LargeInteger
+public class LargeInteger implements Serializable
 {
 
 	private final byte[] ONE = {(byte) 1};
@@ -289,9 +290,7 @@ public class LargeInteger
 			result = result.negate();
 		}
 
-		result = result.trimExtra();
-
-		return result;
+		return result.trimExtra();
 	}
 
 	public LargeInteger divide(LargeInteger other)
@@ -314,7 +313,7 @@ public class LargeInteger
 			a = a.subtract(b);													//Take away b from a
 		}
 
-		return quotient;
+		return quotient.trimExtra();
 	}
 
 	public LargeInteger mod(LargeInteger other)
@@ -329,7 +328,7 @@ public class LargeInteger
 			remainder = new LargeInteger(a.getVal());						//Save the remainder incase it becomes negative
 		}
 
-		return remainder;
+		return remainder.trimExtra();
 	}
 	/**
 	 * Run the extended Euclidean algorithm on this and other
@@ -474,7 +473,7 @@ public class LargeInteger
 
 		while(tempB.length > 2)
 		{
-			if(tempB[0] == 0 && tempB[1] == 0)
+			if(tempB[0] == 0)
 			{
 				byte[] less = new byte[tempB.length-1];
 				for(int i = 0; i < less.length; i++)
