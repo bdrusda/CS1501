@@ -263,19 +263,7 @@ public class LargeInteger
 			{
 				if((b.getVal()[b.length()-1] & 1) == 1)						//Check each byte of b starting at the LSB
 				{
-					/*
-					boolean positive = !(result.isNegative());			//Get the current sign
-					*/
 					result = result.add(a);
-					/*
-					if(positive != !(result.isNegative()))				//If the addition changes it
-					{
-						if(positive)
-							result.extend((byte) 0);									//Extend to preserve the sign
-						else
-							result.extend((byte) 1);
-					}
-					*/
 				}
 
 				boolean negative = a.isNegative();
@@ -402,11 +390,7 @@ public class LargeInteger
 		 //Compute new x and y
 		 x = yPrev;											//Calculate the new x
 		 y = xPrev.subtract(quotient.multiply(yPrev));		//Calculate the new y
-/*
-System.out.println("xprev - (a/b * yprev) = y");
-System.out.println(xPrev.toDecimal()+" - "+"("+quotient.toDecimal()+" * "+yPrev.toDecimal()+" which is "+quotient.multiply(yPrev).toDecimal()+") = "+y.toDecimal());
-System.out.println(xPrev+" - "+"("+quotient+" * "+yPrev+" which is "+quotient.multiply(yPrev)+") = "+y);
-*/
+
 		 //The left bezout number is misrepresented by decimal, however it is correct
 		 return new LargeInteger[] {theGCD.trimExtra(), x.trimExtra(), y.trimExtra()};			//Return the results
 	 }
