@@ -295,9 +295,26 @@ public class LargeInteger implements Serializable
 
 	public LargeInteger divide(LargeInteger other)
 	{
+		boolean aNeg = false;
+		boolean bNeg = false;
+
 		LargeInteger a = new LargeInteger(this);
 		LargeInteger b = new LargeInteger(other);
 		LargeInteger quotient = new LargeInteger(new byte[] {0x00});	//Initialize to 0
+
+		if(a.isNegative())
+		{
+			a = a.negate();
+			aNeg = true;
+		}
+		a.extend((byte) 0);	//Extend to ensure the sign is preserved
+
+		if(b.isNegative())
+		{
+			b = b.negate();
+			bNeg = true;
+		}
+		b.extend((byte) 0);
 
 		while(true)									//While b can still fit into a
 		{
@@ -313,6 +330,18 @@ public class LargeInteger implements Serializable
 			a = a.subtract(b);													//Take away b from a
 		}
 
+
+
+		if(aNeg)
+		{
+			quotient = quotient.negate();
+		}
+
+		if(bNeg)
+		{
+			quotient = quotient.negate();
+		}
+
 		return quotient.trimExtra();
 	}
 
@@ -326,6 +355,14 @@ public class LargeInteger implements Serializable
 		{
 			a = a.subtract(b);												//Take away b from a
 			remainder = new LargeInteger(a.getVal());						//Save the remainder incase it becomes negative
+		}
+
+		//System.out.println("\t\t\t"+remainder);
+		if(remainder.isNegative())
+		{
+			//System.out.print(remainder+" was negative, now it is ");
+			remainder = remainder.add(b);
+			//System.out.println(remainder);
 		}
 
 		return remainder.trimExtra();
@@ -360,7 +397,6 @@ public class LargeInteger implements Serializable
 			 y = new LargeInteger(new byte[] {0x00});
 			 return new LargeInteger[] {this, x, y};
 		 }
-
 		 return XGCDhelper(x, y);
 	 }
 
@@ -377,7 +413,9 @@ public class LargeInteger implements Serializable
 		 //Compute Bezout Numbers
 		 LargeInteger quotient = x.divide(y);	//calculate a/b here
 		 LargeInteger remainder = x.mod(y);		//calculate a%b here
+		 //System.out.println("The remainder will be negative: "+remainder);
 
+		 //System.out.println("Passing in : "+y+" and "+remainder);
 		 LargeInteger[] results = XGCDhelper(y, remainder);	//Find the GCD, it's x, and it's y recursively
 		 //Now work the way back up after getting the GCD
 
@@ -473,7 +511,7 @@ public class LargeInteger implements Serializable
 
 		while(tempB.length > 2)
 		{
-			if(tempB[0] == 0)
+			if(tempB[0] == 0 && ((tempB[1] & 128) == 0)) //While the leading byte is all 0's and the byte after it does not have a 1
 			{
 				byte[] less = new byte[tempB.length-1];
 				for(int i = 0; i < less.length; i++)
